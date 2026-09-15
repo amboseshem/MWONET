@@ -1,0 +1,12 @@
+const plugins=[
+ {name:"Media Manager",icon:"▧",status:"Core",desc:"Central library for photos, videos, documents and captions."},
+ {name:"Events Manager",icon:"◫",status:"Ready",desc:"Events, registrations, attendance and public schedules."},
+ {name:"Member Registry",icon:"◉",status:"Ready",desc:"Profiles, membership status, subscriptions and participation records."},
+ {name:"Project Tracker",icon:"◇",status:"Ready",desc:"Projects, milestones, updates, evidence and implementation status."},
+ {name:"Forms & Submissions",icon:"▣",status:"Ready",desc:"Public forms, applications and structured submissions."},
+ {name:"Email & Notifications",icon:"✉",status:"Planned",desc:"Routing status, announcements and future notification integrations."},
+ {name:"Finance / Revolving Fund",icon:"KSh",status:"Planned",desc:"Controlled financial records aligned with MWONET governance rules."},
+ {name:"SEO Toolkit",icon:"⌕",status:"Core",desc:"Metadata, sitemap, search previews and indexing controls."},
+ {name:"Analytics",icon:"↗",status:"Planned",desc:"Traffic, content performance and engagement reporting."}
+];
+export default function AdminPlugins(){return <main className="admin-content"><div className="admin-page-head"><div><span className="admin-breadcrumb">MWONET Admin / Website</span><h1>Plugins</h1><p>A WordPress-inspired plugin centre, but restricted to MWONET-compatible modules so uploaded code cannot compromise the website or member data.</p></div><button className="admin-primary" type="button">Upload compatible plugin</button></div><div className="admin-plugin-grid">{plugins.map(p=><article className="admin-plugin-card" key={p.name}><span className="admin-app-icon">{p.icon}</span><h3>{p.name}</h3><p>{p.desc}</p><footer><span className={`admin-badge ${p.status==="Planned"?"amber":p.status==="Ready"?"gray":""}`}>{p.status}</span><button className="admin-secondary" type="button" disabled={p.status==="Planned"}>{p.status==="Core"?"Configure":"Enable"}</button></footer></article>)}</div><section className="admin-panel" style={{marginTop:18}}><div className="admin-panel-head"><h2>Security model</h2></div><p className="admin-section-note">Plugins will be registered through an allow-listed manifest with declared permissions. Arbitrary PHP or WordPress plugin uploads will not execute inside this Next.js application. This protects admin credentials, member records and the public website.</p></section></main>}
