@@ -1,5 +1,5 @@
-import {notFound} from "next/navigation";import PageHero from "../../components/PageHero";import {images} from "../../data/site";import {constitution} from "../../data/constitution";
-const sections:{[k:string]:{title:string,text:string,body:React.ReactNode}}={
+import type {ReactNode} from "react";import {notFound} from "next/navigation";import PageHero from "../../components/PageHero";import {images} from "../../data/site";import {constitution} from "../../data/constitution";
+const sections:{[k:string]:{title:string,text:string,body:ReactNode}}={
  history:{title:"Identity & Location",text:"MWONET’s official name and physical base are established in Article 1 of the constitution.",body:<><p className="big-copy">The NGO is formally named <strong>Maanisha Western Organization Network (MWONET)</strong>.</p><p>Its official headquarters and physical office are stated as <strong>Kapkatenyi, Kopsiro Sub-County, Bungoma County, Kenya</strong>. A fuller historical narrative—formation date, founders, milestones and early community activities—has not yet been supplied in the constitution and should be added only from an approved organization profile.</p></>},
  vision:{title:"Our Vision",text:"The future MWONET is working to help create.",body:<p className="big-copy">{constitution.vision}</p>},
  mission:{title:"Our Mission",text:"The organization’s constitutional purpose and approach.",body:<p className="big-copy">{constitution.mission}</p>},
