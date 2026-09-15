@@ -7,39 +7,70 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserStatus { ACTIVE INVITED SUSPENDED DISABLED }
-enum PublishStatus { DRAFT REVIEW PUBLISHED SCHEDULED ARCHIVED }
-enum MemberStatus { PENDING ACTIVE INACTIVE SUSPENDED TERMINATED }
-enum ProjectStatus { PLANNING ACTIVE PAUSED COMPLETED ARCHIVED }
-enum PluginStatus { INSTALLED ENABLED DISABLED }
+enum UserStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+  DISABLED
+}
+
+enum PublishStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  SCHEDULED
+  ARCHIVED
+}
+
+enum MemberStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  TERMINATED
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum PluginStatus {
+  INSTALLED
+  ENABLED
+  DISABLED
+}
 
 model User {
-  id           String       @id @default(cuid())
-  email        String       @unique
+  id           String         @id @default(cuid())
+  email        String         @unique
   name         String?
   passwordHash String?
-  status       UserStatus   @default(INVITED)
+  status       UserStatus     @default(INVITED)
   lastLoginAt  DateTime?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   roles        UserRole[]
   member       MemberProfile?
-  auditLogs    AuditLog[]   @relation("AuditActor")
-  media        MediaAsset[] @relation("MediaUploader")
+  auditLogs    AuditLog[]     @relation("AuditActor")
+  media        MediaAsset[]   @relation("MediaUploader")
   revisions    PageRevision[] @relation("RevisionAuthor")
 }
 
 model Role {
-  id          String @id @default(cuid())
-  name        String @unique
+  id          String           @id @default(cuid())
+  name        String           @unique
   description String?
   users       UserRole[]
   permissions RolePermission[]
 }
 
 model Permission {
-  id          String @id @default(cuid())
-  key         String @unique
+  id          String           @id @default(cuid())
+  key         String           @unique
   description String?
   roles       RolePermission[]
 }
@@ -47,31 +78,33 @@ model Permission {
 model UserRole {
   userId String
   roleId String
-  user   User @relation(fields:[userId],references:[id],onDelete:Cascade)
-  role   Role @relation(fields:[roleId],references:[id],onDelete:Cascade)
-  @@id([userId,roleId])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
 }
 
 model RolePermission {
   roleId       String
   permissionId String
-  role         Role @relation(fields:[roleId],references:[id],onDelete:Cascade)
-  permission   Permission @relation(fields:[permissionId],references:[id],onDelete:Cascade)
-  @@id([roleId,permissionId])
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
 }
 
 model Page {
-  id          String        @id @default(cuid())
-  slug        String        @unique
+  id          String          @id @default(cuid())
+  slug        String          @unique
   title       String
-  status      PublishStatus @default(DRAFT)
+  status      PublishStatus   @default(DRAFT)
   seoTitle    String?
   description String?
   socialImage String?
   publishedAt DateTime?
   scheduledAt DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
   blocks      ContentBlock[]
   revisions   PageRevision[]
 }
@@ -82,8 +115,9 @@ model ContentBlock {
   type     String
   position Int
   data     Json
-  page     Page @relation(fields:[pageId],references:[id],onDelete:Cascade)
-  @@unique([pageId,position])
+  page     Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, position])
 }
 
 model PageRevision {
@@ -93,8 +127,8 @@ model PageRevision {
   snapshot  Json
   note      String?
   createdAt DateTime @default(now())
-  page      Page     @relation(fields:[pageId],references:[id],onDelete:Cascade)
-  author    User?    @relation("RevisionAuthor",fields:[authorId],references:[id],onDelete:SetNull)
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  author    User?    @relation("RevisionAuthor", fields: [authorId], references: [id], onDelete: SetNull)
 }
 
 model MediaAsset {
@@ -108,7 +142,7 @@ model MediaAsset {
   tags       String[]
   uploadedBy String?
   createdAt  DateTime @default(now())
-  uploader   User?    @relation("MediaUploader",fields:[uploadedBy],references:[id],onDelete:SetNull)
+  uploader   User?    @relation("MediaUploader", fields: [uploadedBy], references: [id], onDelete: SetNull)
 }
 
 model Post {
@@ -145,42 +179,42 @@ model MemberProfile {
   dateOfBirth     DateTime?
   status          MemberStatus @default(PENDING)
   joinedAt        DateTime?
-  registrationFee Decimal?     @db.Decimal(12,2)
-  monthlyFee      Decimal?     @db.Decimal(12,2)
-  user            User         @relation(fields:[userId],references:[id],onDelete:Cascade)
+  registrationFee Decimal?     @db.Decimal(12, 2)
+  monthlyFee      Decimal?     @db.Decimal(12, 2)
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Program {
-  id          String @id @default(cuid())
-  slug        String @unique
-  title       String
-  summary     String?
-  content     Json?
-  projects    Project[]
+  id       String    @id @default(cuid())
+  slug     String    @unique
+  title    String
+  summary  String?
+  content  Json?
+  projects Project[]
 }
 
 model Project {
-  id          String        @id @default(cuid())
-  programId   String?
-  title       String
-  slug        String        @unique
-  summary     String?
-  status      ProjectStatus @default(PLANNING)
-  startDate   DateTime?
-  endDate     DateTime?
-  location    String?
-  content     Json?
-  program     Program?      @relation(fields:[programId],references:[id],onDelete:SetNull)
+  id        String        @id @default(cuid())
+  programId String?
+  title     String
+  slug      String        @unique
+  summary   String?
+  status    ProjectStatus @default(PLANNING)
+  startDate DateTime?
+  endDate   DateTime?
+  location  String?
+  content   Json?
+  program   Program?      @relation(fields: [programId], references: [id], onDelete: SetNull)
 }
 
 model Theme {
-  id          String  @id @default(cuid())
-  key         String  @unique
-  name        String
-  version     String
-  active      Boolean @default(false)
-  manifest    Json
-  settings    Json?
+  id       String  @id @default(cuid())
+  key      String  @unique
+  name     String
+  version  String
+  active   Boolean @default(false)
+  manifest Json
+  settings Json?
 }
 
 model Plugin {
@@ -195,8 +229,8 @@ model Plugin {
 }
 
 model Form {
-  id          String @id @default(cuid())
-  key         String @unique
+  id          String           @id @default(cuid())
+  key         String           @unique
   name        String
   schema      Json
   submissions FormSubmission[]
@@ -207,7 +241,7 @@ model FormSubmission {
   formId    String
   data      Json
   createdAt DateTime @default(now())
-  form      Form     @relation(fields:[formId],references:[id],onDelete:Cascade)
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
 }
 
 model SiteSetting {
@@ -226,7 +260,8 @@ model AuditLog {
   after      Json?
   metadata   Json?
   createdAt  DateTime @default(now())
-  actor      User?    @relation("AuditActor",fields:[actorId],references:[id],onDelete:SetNull)
-  @@index([resource,resourceId])
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([resource, resourceId])
   @@index([createdAt])
 }
