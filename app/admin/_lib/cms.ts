@@ -11,7 +11,7 @@ const themeCatalog=[
  {key:"community-green",name:"Community Green",version:"1.0.0",active:false,manifest:{description:"Human-centered layouts focused on youth, women and community action."}},
  {key:"corporate-ngo",name:"Corporate NGO",version:"1.0.0",active:false,manifest:{description:"Clean institutional layout for partners, grants and formal reporting."}},
  {key:"youth-impact",name:"Youth Impact",version:"1.0.0",active:false,manifest:{description:"Bolder cards and energetic layouts for youth programs and campaigns."}}
-] as const;
+];
 
 const pluginCatalog=[
  {key:"media-manager",name:"Media Manager",permissions:["manage_media"],status:"ENABLED" as const,manifest:{description:"Central library for photos, videos, documents and captions."}},
@@ -23,32 +23,19 @@ const pluginCatalog=[
  {key:"finance-revolving-fund",name:"Finance / Revolving Fund",permissions:["manage_finance"],status:"INSTALLED" as const,manifest:{description:"Controlled financial records aligned with MWONET governance rules."}},
  {key:"seo-toolkit",name:"SEO Toolkit",permissions:["manage_seo"],status:"ENABLED" as const,manifest:{description:"Metadata, sitemap, social previews and indexing controls."}},
  {key:"analytics",name:"Analytics",permissions:["view_audit_logs"],status:"INSTALLED" as const,manifest:{description:"Traffic, content performance and engagement reporting."}}
-] as const;
+];
 
-export async function ensureCorePages(){
-  await Promise.all(publicPages.map(([title,path])=>db.page.upsert({
-    where:{slug:pathToSlug(path)},update:{},create:{slug:pathToSlug(path),title,status:"PUBLISHED",seoTitle:`${title} | MWONET`,description:`Official MWONET ${title} page.`}
-  })));
-}
+export async function ensureCorePages(){await Promise.all(publicPages.map(([title,path])=>db.page.upsert({where:{slug:pathToSlug(path)},update:{},create:{slug:pathToSlug(path),title,status:"PUBLISHED",seoTitle:`${title} | MWONET`,description:`Official MWONET ${title} page.`}})))}
 
 export async function ensureSystemCatalog(){
-  await Promise.all(programs.map(p=>db.program.upsert({where:{slug:p.slug},update:{title:p.title,summary:p.summary},create:{slug:p.slug,title:p.title,summary:p.summary}})));
-  await Promise.all(themeCatalog.map(t=>db.theme.upsert({where:{key:t.key},update:{name:t.name,version:t.version,manifest:t.manifest},create:{key:t.key,name:t.name,version:t.version,active:t.active,manifest:t.manifest}})));
-  await Promise.all(pluginCatalog.map(p=>db.plugin.upsert({where:{key:p.key},update:{name:p.name,version:"1.0.0",permissions:[...p.permissions],manifest:p.manifest},create:{key:p.key,name:p.name,version:"1.0.0",status:p.status,permissions:[...p.permissions],manifest:p.manifest}})));
+ await Promise.all(programs.map(p=>db.program.upsert({where:{slug:p.slug},update:{title:p.title,summary:p.summary},create:{slug:p.slug,title:p.title,summary:p.summary}})));
+ await Promise.all(themeCatalog.map(t=>db.theme.upsert({where:{key:t.key},update:{name:t.name,version:t.version,manifest:t.manifest},create:{key:t.key,name:t.name,version:t.version,active:t.active,manifest:t.manifest}})));
+ await Promise.all(pluginCatalog.map(p=>db.plugin.upsert({where:{key:p.key},update:{name:p.name,version:"1.0.0",permissions:p.permissions,manifest:p.manifest},create:{key:p.key,name:p.name,version:"1.0.0",status:p.status,permissions:p.permissions,manifest:p.manifest}})));
 }
 
 export async function getCmsPages(){await ensureCorePages();return db.page.findMany({orderBy:{title:"asc"},include:{_count:{select:{revisions:true,blocks:true}}}})}
 export async function getCmsPage(slug:string){await ensureCorePages();return db.page.findUnique({where:{slug},include:{blocks:{orderBy:{position:"asc"}},revisions:{orderBy:{createdAt:"desc"},take:10,include:{author:true}}}})}
 
-export async function ensureAdminUser(email:string){
-  if(!email)return null;
-  const user=await db.user.upsert({where:{email},update:{status:"ACTIVE",lastLoginAt:new Date()},create:{email,name:"MWONET Super Admin",status:"ACTIVE",lastLoginAt:new Date()}});
-  const role=await db.role.upsert({where:{name:"Super Admin"},update:{description:"Full MWONET administrative access."},create:{name:"Super Admin",description:"Full MWONET administrative access."}});
-  await db.userRole.upsert({where:{userId_roleId:{userId:user.id,roleId:role.id}},update:{},create:{userId:user.id,roleId:role.id}});
-  return user;
-}
+export async function ensureAdminUser(email:string){if(!email)return null;const user=await db.user.upsert({where:{email},update:{status:"ACTIVE",lastLoginAt:new Date()},create:{email,name:"MWONET Super Admin",status:"ACTIVE",lastLoginAt:new Date()}});const role=await db.role.upsert({where:{name:"Super Admin"},update:{description:"Full MWONET administrative access."},create:{name:"Super Admin",description:"Full MWONET administrative access."}});await db.userRole.upsert({where:{userId_roleId:{userId:user.id,roleId:role.id}},update:{},create:{userId:user.id,roleId:role.id}});return user}
 
-export async function databaseHealth(){
-  const started=Date.now();
-  try{await db.$queryRaw`SELECT 1`;return {ok:true,latency:Date.now()-started}}catch(error){return {ok:false,latency:Date.now()-started,error:error instanceof Error?error.message:"Database unavailable"}}
-}
+export async function databaseHealth(){const started=Date.now();try{await db.$queryRaw`SELECT 1`;return {ok:true,latency:Date.now()-started}}catch(error){return {ok:false,latency:Date.now()-started,error:error instanceof Error?error.message:"Database unavailable"}}}
