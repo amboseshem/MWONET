@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./constitution.css";
 import "./member-auth.css";
+import "./cms-public.css";
 import SiteHeader from "./components/SiteHeader";
 import SiteFooter from "./components/SiteFooter";
 
