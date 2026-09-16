@@ -207,6 +207,46 @@ model Project {
   program   Program?      @relation(fields: [programId], references: [id], onDelete: SetNull)
 }
 
+model LeadershipProfile {
+  id        String   @id @default(cuid())
+  name      String
+  role      String
+  bio       String?
+  photoUrl  String?
+  email     String?
+  phone     String?
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model NavigationItem {
+  id        String   @id @default(cuid())
+  label     String
+  href      String
+  location  String   @default("header")
+  parentId  String?
+  order     Int      @default(0)
+  visible   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([location, order])
+}
+
+model Partner {
+  id          String   @id @default(cuid())
+  name        String
+  category    String?
+  website     String?
+  logoUrl     String?
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Theme {
   id       String  @id @default(cuid())
   key      String  @unique
