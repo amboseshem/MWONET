@@ -1,10 +1,12 @@
+import {getAdminSession} from "../../_lib/auth";
+import {requirePermission} from "../../_lib/access";
 import {db} from "../../_lib/db";
 import {ensureSystemCatalog} from "../../_lib/cms";
 import {assignRoleAction,promoteLeadershipAction,removeRoleAction,updateUserStatusAction} from "./actions";
 
 export const dynamic="force-dynamic";
 
-export default async function UsersPage(){
+export default async function UsersPage(){const session=await getAdminSession();if(!session)throw new Error("Not signed in");await requirePermission(session.email,"manage_users");
  await ensureSystemCatalog();
  const [users,roles]=await Promise.all([
   db.user.findMany({orderBy:{createdAt:"desc"},include:{roles:{include:{role:true}},member:true}}),
