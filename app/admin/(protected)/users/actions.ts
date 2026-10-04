@@ -4,11 +4,12 @@ import {db} from "../../_lib/db";
 import {getAdminSession} from "../../_lib/auth";
 import {getUserAccess,requirePermission} from "../../_lib/access";
 import {ensureSystemCatalog} from "../../_lib/cms";
+import {hashPassword} from "../../../_lib/member-auth";
 
 function v(fd:FormData,key:string){return String(fd.get(key)||"").trim()}
 async function guard(){const s=await getAdminSession();if(!s)throw new Error("Not signed in");return requirePermission(s.email,"manage_users")}
 async function actorId(email:string){return (await db.user.findUnique({where:{email}}))?.id}
-async function superGuard(){const s=await getAdminSession();if(!s)throw new Error("Not signed in");const a=await getUserAccess(s.email);if(!a.isSuperAdmin)throw new Error("Only Super Admin can change roles or leadership access.");return a}
+async function superGuard(){const s=await getAdminSession();if(!s)throw new Error("Not signed in");const a=await getUserAccess(s.email);if(!a.isSuperAdmin)throw new Error("Only Super Admin can change roles, leadership access or reset staff/member passwords.");return a}
 
 export async function assignRoleAction(fd:FormData){
  const access=await superGuard();await ensureSystemCatalog();
@@ -42,4 +43,13 @@ export async function promoteLeadershipAction(fd:FormData){
  else await db.leadershipProfile.create({data:{name:user.name||user.email,role:title,bio:bio||null,email:user.email,active:true}});
  await db.auditLog.create({data:{actorId:await actorId(access.user!.email),action:"user.promote.leadership",resource:"User",resourceId:userId,after:{title,roleName}}});
  revalidatePath("/admin/users");revalidatePath("/admin/leadership");revalidatePath("/leadership");
+}
+export async function resetUserPasswordAction(fd:FormData){
+ const access=await superGuard();
+ const userId=v(fd,"userId"),temporaryPassword=v(fd,"temporaryPassword");
+ if(!userId||temporaryPassword.length<10||!/[A-Z]/.test(temporaryPassword)||!/[a-z]/.test(temporaryPassword)||!/[0-9]/.test(temporaryPassword))return;
+ const target=await db.user.findUnique({where:{id:userId},include:{roles:{include:{role:true}}}});if(!target||target.roles.some(r=>r.role.name==="Super Admin"))return;
+ await db.user.update({where:{id:userId},data:{passwordHash:hashPassword(temporaryPassword),status:"ACTIVE"}});
+ await db.auditLog.create({data:{actorId:await actorId(access.user!.email),action:"user.password.admin_reset",resource:"User",resourceId:userId,metadata:{temporaryPasswordIssued:true}}});
+ revalidatePath("/admin/users");
 }

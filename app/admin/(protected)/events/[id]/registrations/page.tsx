@@ -1,0 +1,14 @@
+import Link from "next/link";
+import {notFound} from "next/navigation";
+import {getAdminSession} from "../../../../_lib/auth";
+import {requirePermission} from "../../../../_lib/access";
+import {db} from "../../../../_lib/db";
+import {updateRegistrationStatus} from "../../actions";
+
+export const dynamic="force-dynamic";
+export default async function EventRegistrations({params}:{params:Promise<{id:string}>}){
+ const session=await getAdminSession();if(!session)throw new Error("Not signed in");await requirePermission(session.email,"manage_events");
+ const {id}=await params;const event=await db.event.findUnique({where:{id},include:{registrations:{orderBy:{createdAt:"desc"}}}});if(!event)return notFound();
+ const attended=event.registrations.filter(r=>r.status==="ATTENDED").length;
+ return <main className="admin-content"><div className="admin-page-head"><div><span className="admin-breadcrumb">MWONET Admin / Events / Attendance</span><h1>{event.title}</h1><p>Review event registrations and record attendance without deleting the original registration trail.</p></div><Link className="admin-secondary" href="/admin/events">← Back to events</Link></div><section className="admin-stat-grid"><article className="admin-stat"><small>REGISTERED</small><strong>{event.registrations.length}</strong><span>Total registration records</span></article><article className="admin-stat"><small>ATTENDED</small><strong>{attended}</strong><span>Confirmed attendance</span></article><article className="admin-stat"><small>CANCELLED</small><strong>{event.registrations.filter(r=>r.status==="CANCELLED").length}</strong><span>Cancelled records</span></article><article className="admin-stat"><small>EVENT DATE</small><strong>{event.startsAt.toLocaleDateString("en-KE")}</strong><span>{event.venue||"Venue not set"}</span></article></section><section className="admin-panel"><div className="admin-panel-head"><h2>Registration list</h2><span className="admin-badge">{event.registrations.length}</span></div><div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Person</th><th>Contact</th><th>Registered</th><th>Status</th><th>Update</th></tr></thead><tbody>{event.registrations.length?event.registrations.map(r=><tr key={r.id}><td><strong>{r.name}</strong></td><td>{r.email}<small>{r.phone||""}</small></td><td>{r.createdAt.toLocaleString("en-KE")}</td><td><span className="admin-badge">{r.status}</span></td><td><form action={updateRegistrationStatus} className="admin-inline-form"><input type="hidden" name="id" value={r.id}/><select name="status" defaultValue={r.status}><option>REGISTERED</option><option>ATTENDED</option><option>CANCELLED</option></select><button className="admin-secondary">Save</button></form></td></tr>):<tr><td colSpan={5}>No registrations yet.</td></tr>}</tbody></table></div></section></main>
+}
