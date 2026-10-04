@@ -5,6 +5,7 @@ import {redirect} from "next/navigation";
 import {db} from "../../../admin/_lib/db";
 import {getAdminSession} from "../../../admin/_lib/auth";
 import {ensureAdminUser} from "../../../admin/_lib/cms";
+import {requirePermission} from "../../../admin/_lib/access";
 
 async function guardPermission(){const s=await getAdminSession();if(!s)throw new Error("Not signed in");await requirePermission(s.email,"manage_plugins");return s}
 export async function togglePluginAction(formData:FormData){await guardPermission();
