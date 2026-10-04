@@ -1,3 +1,5 @@
+import {getAdminSession} from "../../_lib/auth";
+import {requirePermission} from "../../_lib/access";
 import Link from "next/link";
 import {db} from "../../_lib/db";
 import {createMediaAction,deleteMediaAction,updateMediaAction} from "./actions";
@@ -7,7 +9,7 @@ export const dynamic="force-dynamic";
 function qs(value:string|undefined){return (value||"").trim()}
 function isImage(type:string){return type.toLowerCase().startsWith("image")||type.toLowerCase()==="photo"}
 
-export default async function AdminMedia({searchParams}:{searchParams:Promise<{q?:string;type?:string;tag?:string;edit?:string}>}){
+export default async function AdminMedia({searchParams}:{searchParams:Promise<{q?:string;type?:string;tag?:string;edit?:string}>}){const session=await getAdminSession();if(!session)throw new Error("Not signed in");await requirePermission(session.email,"manage_media");
  const sp=await searchParams; const q=qs(sp.q),type=qs(sp.type),tag=qs(sp.tag),edit=qs(sp.edit);
  const where:any={};
  if(type&&type!=="all")where.type=type;
