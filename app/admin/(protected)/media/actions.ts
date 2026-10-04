@@ -4,7 +4,7 @@ import {revalidatePath} from "next/cache";
 import {redirect} from "next/navigation";
 import {db} from "../../_lib/db";
 import {getAdminSession} from "../../_lib/auth";
-import {requirePermission} from "../../_lib/access";
+import {getUserAccess,requirePermission} from "../../_lib/access";
 
 async function guardPermission(){const s=await getAdminSession();if(!s)throw new Error("Not signed in");await requirePermission(s.email,"manage_media");return s}
 function text(fd:FormData,key:string){return String(fd.get(key)||"").trim()}
@@ -30,7 +30,7 @@ export async function updateMediaAction(fd:FormData){await guardPermission();
  await audit("media.update",id,before,row); refresh();
 }
 
-export async function deleteMediaAction(fd:FormData){await guardPermission();
+export async function deleteMediaAction(fd:FormData){const s=await getAdminSession();if(!s)throw new Error("Not signed in");const access=await getUserAccess(s.email);if(!access.isSuperAdmin)throw new Error("Only Super Admin can permanently delete media.");
  const id=text(fd,"id"); if(!id)return;
  const before=await db.mediaAsset.findUnique({where:{id}}); if(!before)return;
  await db.mediaAsset.delete({where:{id}}); await audit("media.delete",id,before,null); refresh();
