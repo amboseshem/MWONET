@@ -1,4 +1,4 @@
-import {getPublicCmsPage} from "../_lib/public-cms";
+import {getPublicCmsPage,getPublicCmsMetadata} from "../_lib/public-cms";
 import CmsPageRenderer from "../components/CmsPageRenderer";
 import Link from "next/link";import PageHero from "../components/PageHero";import {elgonTopics,images} from "../data/site";
 function Elgon(){return <><PageHero eyebrow="Mount Elgon & our environment" title="One mountain. Many connected stories." text="Explore the ecosystem, forests, biodiversity, water, farms, erosion and community conservation shaping the Mount Elgon landscape." image={images.mountain}/><section className="section"><div className="container card-grid three">{elgonTopics.map((t,i)=><article className="story-card-pro" key={t.slug}><small>0{i+1}</small><h3>{t.title}</h3><p>{t.summary}</p><Link href={`/mount-elgon/${t.slug}`}>Explore story →</Link></article>)}</div></section><section className="feature-split reverse"><div className="feature-image" style={{backgroundImage:`url(${images.water})`}}/><div className="feature-copy"><p className="eyebrow light">FROM RIDGE TO RIVER</p><h2>Healthy landscapes support healthy communities.</h2><p>Environmental protection connects forests, farms, soils, water systems, livelihoods and future generations.</p><Link className="button light-button" href="/tree-restoration">See restoration work</Link></div></section></>}
@@ -9,3 +9,5 @@ export default async function CmsAwareElgon(){
  if(cms)return <CmsPageRenderer title={cms.title} description={cms.description} blocks={cms.blocks}/>;
  return <Elgon/>;
 }
+
+export async function generateMetadata(){return getPublicCmsMetadata("mount-elgon","Mount Elgon & Environment")}
