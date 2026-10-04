@@ -1,4 +1,4 @@
-import {getPublicCmsPage} from "./_lib/public-cms";
+import {getPublicCmsPage,getPublicCmsMetadata} from "./_lib/public-cms";
 import CmsPageRenderer from "./components/CmsPageRenderer";
 import Link from "next/link";
 import {images,programs} from "./data/site";
@@ -20,3 +20,5 @@ export default async function CmsAwareHome(){
  if(cms)return <CmsPageRenderer title={cms.title} description={cms.description} blocks={cms.blocks}/>;
  return <Home/>;
 }
+
+export async function generateMetadata(){return getPublicCmsMetadata("home","MWONET | Maanisha Western Organization Network")}
