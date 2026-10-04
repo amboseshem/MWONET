@@ -1,3 +1,5 @@
+import {getAdminSession} from "../../_lib/auth";
+import {requirePermission} from "../../_lib/access";
 import Link from "next/link";
 import {getCmsPages,slugToPublicPath} from "../../_lib/cms";
 import {archivePageAction,createPageAction,deletePageAction,duplicatePageAction} from "./actions";
@@ -6,7 +8,7 @@ export const dynamic="force-dynamic";
 
 const statuses=["ALL","DRAFT","REVIEW","PUBLISHED","SCHEDULED","ARCHIVED"];
 
-export default async function AdminPages({searchParams}:{searchParams:Promise<{q?:string;status?:string;deleted?:string;error?:string}>}){
+export default async function AdminPages({searchParams}:{searchParams:Promise<{q?:string;status?:string;deleted?:string;error?:string}>}){const session=await getAdminSession();if(!session)throw new Error("Not signed in");await requirePermission(session.email,"edit_pages");
  const sp=await searchParams;const q=(sp.q||"").trim().toLowerCase();const status=(sp.status||"ALL").toUpperCase();
  const all=await getCmsPages();const pages=all.filter(p=>(status==="ALL"||p.status===status)&&(!q||p.title.toLowerCase().includes(q)||p.slug.toLowerCase().includes(q)));
  const counts=Object.fromEntries(statuses.map(s=>[s,s==="ALL"?all.length:all.filter(p=>p.status===s).length]));
