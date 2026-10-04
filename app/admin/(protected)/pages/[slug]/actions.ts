@@ -17,8 +17,10 @@ export async function savePageAction(formData:FormData){
   const existing=await db.page.findUnique({where:{slug},include:{blocks:true}});if(!existing)throw new Error("Page not found.");
   const actor=await ensureAdminUser(session.email);
   const status=value(formData,"status").toUpperCase() as "DRAFT"|"REVIEW"|"PUBLISHED"|"SCHEDULED"|"ARCHIVED";
+  if(status==="PUBLISHED"||status==="SCHEDULED")await requirePermission(session.email,"publish_pages");
   const title=value(formData,"title")||existing.title;const description=value(formData,"description");const seoTitle=value(formData,"seoTitle");const socialImage=value(formData,"socialImage");
   const scheduled=value(formData,"scheduledAt");const scheduledAt=scheduled?new Date(scheduled):null;
+  if(status==="SCHEDULED"&&!scheduledAt)throw new Error("A scheduled page requires a publication date and time.");
   const heroData={eyebrow:value(formData,"heroEyebrow"),heading:value(formData,"heroHeading"),text:value(formData,"heroText"),image:value(formData,"heroImage"),buttonLabel:value(formData,"heroButtonLabel"),buttonHref:value(formData,"heroButtonHref")};
   const richData={heading:value(formData,"richHeading"),body:value(formData,"richBody")};
   const imageData={url:value(formData,"featureImage"),alt:value(formData,"featureAlt"),caption:value(formData,"featureCaption")};
@@ -41,14 +43,17 @@ export async function savePageAction(formData:FormData){
 }
 
 export async function restoreRevisionAction(formData:FormData){
- const session=await getAdminSession();if(!session)redirect("/admin/login");const slug=value(formData,"slug"),revisionId=value(formData,"revisionId");if(!slug||!revisionId)return;
+ const session=await getAdminSession();if(!session)redirect("/admin/login");await requirePermission(session.email,"edit_pages");
+ const slug=value(formData,"slug"),revisionId=value(formData,"revisionId");if(!slug||!revisionId)return;
  const page=await db.page.findUnique({where:{slug},include:{blocks:true}});const revision=await db.pageRevision.findUnique({where:{id:revisionId}});if(!page||!revision||revision.pageId!==page.id)return;
- const actor=await ensureAdminUser(session.email);const snap=revision.snapshot as Record<string,unknown>;const oldBlocks=Array.isArray(snap.blocks)?snap.blocks as Array<{type?:string;position?:number;data?:unknown}>:[];
+ const actor=await ensureAdminUser(session.email);const snap=revision.snapshot as Record<string,unknown>;const targetStatus=String(snap.status||page.status).toUpperCase();
+ if(targetStatus==="PUBLISHED"||targetStatus==="SCHEDULED")await requirePermission(session.email,"publish_pages");
+ const oldBlocks=Array.isArray(snap.blocks)?snap.blocks as Array<{type?:string;position?:number;data?:unknown}>:[];
  await db.$transaction(async tx=>{
   await tx.pageRevision.create({data:{pageId:page.id,authorId:actor?.id,snapshot:{title:page.title,status:page.status,seoTitle:page.seoTitle,description:page.description,socialImage:page.socialImage,scheduledAt:page.scheduledAt,blocks:page.blocks},note:"Automatic backup before revision restore"}});
   await tx.page.update({where:{id:page.id},data:{title:String(snap.title||page.title),status:(snap.status||page.status) as never,seoTitle:(snap.seoTitle as string|null|undefined)??null,description:(snap.description as string|null|undefined)??null,socialImage:(snap.socialImage as string|null|undefined)??null,scheduledAt:snap.scheduledAt?new Date(String(snap.scheduledAt)):null}});
   await tx.contentBlock.deleteMany({where:{pageId:page.id}});if(oldBlocks.length)await tx.contentBlock.createMany({data:oldBlocks.map((b,i)=>({pageId:page.id,type:String(b.type||"rich-text"),position:Number.isInteger(b.position)?Number(b.position):i,data:(b.data||{}) as never}))});
-  await tx.auditLog.create({data:{actorId:actor?.id,action:"page.revision.restore",resource:"Page",resourceId:page.id,after:{revisionId}}});
+  await tx.auditLog.create({data:{actorId:actor?.id,action:"page.revision.restore",resource:"Page",resourceId:page.id,after:{revisionId,targetStatus}}});
  });
  revalidatePath(`/admin/pages/${slug}`);revalidatePath(slugToPublicPath(slug));redirect(`/admin/pages/${slug}?restored=1`);
 }

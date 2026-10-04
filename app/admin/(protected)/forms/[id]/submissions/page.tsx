@@ -1,8 +1,8 @@
-import {getAdminSession} from "../../../_lib/auth";
-import {requirePermission} from "../../../_lib/access";
+import {getAdminSession} from "../../../../_lib/auth";
+import {requirePermission} from "../../../../_lib/access";
 import {notFound} from "next/navigation";
 import Link from "next/link";
-import {db} from "../../../_lib/db";
+import {db} from "../../../../_lib/db";
 
 export const dynamic="force-dynamic";
 export default async function FormSubmissions({params}:{params:Promise<{id:string}>}){const session=await getAdminSession();if(!session)throw new Error("Not signed in");await requirePermission(session.email,"manage_forms");
