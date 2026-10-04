@@ -4,6 +4,7 @@ import {revalidatePath} from "next/cache";
 import {redirect} from "next/navigation";
 import {db} from "../../../_lib/db";
 import {getAdminSession} from "../../../_lib/auth";
+import {requirePermission} from "../../../_lib/access";
 import {ensureAdminUser,slugToPublicPath} from "../../../_lib/cms";
 
 function value(fd:FormData,key:string){return String(fd.get(key)||"").trim()}
@@ -11,6 +12,7 @@ function list(value:string){return value.split("\n").map(x=>x.trim()).filter(Boo
 
 export async function savePageAction(formData:FormData){
   const session=await getAdminSession();if(!session)redirect("/admin/login");
+  await requirePermission(session.email,"edit_pages");
   const slug=value(formData,"slug");if(!slug)throw new Error("Page slug is required.");
   const existing=await db.page.findUnique({where:{slug},include:{blocks:true}});if(!existing)throw new Error("Page not found.");
   const actor=await ensureAdminUser(session.email);
