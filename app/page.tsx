@@ -1,8 +1,10 @@
+import {getPublicCmsPage} from "./_lib/public-cms";
+import CmsPageRenderer from "./components/CmsPageRenderer";
 import Link from "next/link";
 import {images,programs} from "./data/site";
 import {constitution} from "./data/constitution";
 
-export default function Home(){return <>
+function Home(){return <>
 <section className="home-hero" style={{backgroundImage:`linear-gradient(90deg,rgba(5,29,20,.93) 0%,rgba(5,29,20,.67) 48%,rgba(5,29,20,.22) 100%),url(${images.mountain})`}}><div className="container home-hero-grid"><div><p className="eyebrow light">MAANISHA WESTERN ORGANIZATION NETWORK · BUNGOMA COUNTY</p><h1>Grow people.<br/><span>Restore nature.</span><br/>Build wealth.</h1><p>MWONET connects environmental conservation, youth and women empowerment, agribusiness and financial self-reliance in communities around Mount Elgon.</p><div className="hero-actions"><Link className="button primary" href="/focus-areas">Explore our programs</Link><Link className="button outline-light" href="/membership">Membership</Link></div></div><div className="impact-panel"><small>HEADQUARTERS</small><strong>Kapkatenyi</strong><p>Kopsiro Sub-County · Bungoma County · Kenya</p><Link href="/about">Discover MWONET →</Link></div></div></section>
 <section className="credibility-strip"><div className="container credibility-grid"><div><b>18–35</b><span>Constitutional youth membership age</span></div><div><b>4</b><span>Core economic & environmental objectives</span></div><div><b>6</b><span>Executive committee positions</span></div><div><b>1 mission</b><span>Self-reliant, greener communities</span></div></div></section>
 <section className="section"><div className="container intro-grid"><div><p className="eyebrow">WHO WE ARE</p><h2>A community network designed for action, accountability and self-reliance.</h2></div><div><p className="big-copy">{constitution.mission}</p><p>MWONET&apos;s constitution places practical environmental work alongside enterprise growth, food security, member finance and accountable leadership.</p><Link className="text-link" href="/constitution">Explore our constitutional foundation →</Link></div></div></section>
@@ -11,3 +13,10 @@ export default function Home(){return <>
 <section className="section"><div className="container"><div className="section-head"><div><p className="eyebrow">OUR ECONOMIC MODEL</p><h2>Conservation that also strengthens livelihoods.</h2></div><Link className="text-link" href="/financial-model">Financial model →</Link></div><div className="photo-grid"><article className="photo-card wide" style={{backgroundImage:`url(${images.seedlings})`}}><span>TREE NURSERIES</span><strong>Seedlings for restoration and income</strong></article><article className="photo-card" style={{backgroundImage:`url(${images.coffee})`}}><span>COFFEE</span><strong>High-yielding cash-crop nurseries</strong></article><article className="photo-card" style={{backgroundImage:`url(${images.livestock})`}}><span>LIVESTOCK</span><strong>Chicken and goat enterprise</strong></article></div></div></section>
 <section className="section dark"><div className="container cta-grid"><div><p className="eyebrow light">MEMBERSHIP & GOVERNANCE</p><h2>A transparent network with rights, responsibilities and accountable leadership.</h2><p>Membership, meetings, leadership roles, subscriptions, project benefits and the internal revolving fund are all defined by MWONET&apos;s constitution.</p></div><div className="cta-actions"><Link className="button light-button" href="/membership">Membership guide</Link><Link className="button outline-light" href="/governance">Governance</Link></div></div></section>
 </>}
+
+
+export default async function CmsAwareHome(){
+ const cms=await getPublicCmsPage("home");
+ if(cms)return <CmsPageRenderer title={cms.title} description={cms.description} blocks={cms.blocks}/>;
+ return <Home/>;
+}
