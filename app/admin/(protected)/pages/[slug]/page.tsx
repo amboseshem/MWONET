@@ -1,3 +1,5 @@
+import {getAdminSession} from "../../../_lib/auth";
+import {requirePermission} from "../../../_lib/access";
 import Link from "next/link";
 import {notFound} from "next/navigation";
 import {db} from "../../../_lib/db";
@@ -6,7 +8,7 @@ import {restoreRevisionAction,savePageAction} from "./actions";
 
 export const dynamic="force-dynamic";
 
-export default async function AdminPageEditor({params,searchParams}:{params:Promise<{slug:string}>,searchParams:Promise<{saved?:string;created?:string;restored?:string}>}){
+export default async function AdminPageEditor({params,searchParams}:{params:Promise<{slug:string}>,searchParams:Promise<{saved?:string;created?:string;restored?:string}>}){const session=await getAdminSession();if(!session)throw new Error("Not signed in");await requirePermission(session.email,"edit_pages");
  const {slug}=await params;const sp=await searchParams;const page=await getCmsPage(slug);if(!page)return notFound();const path=slugToPublicPath(slug);
  const block=(position:number)=>page.blocks.find(b=>b.position===position)?.data as Record<string,unknown>|undefined;
  const hero=block(0)||{},rich=block(1)||{},image=block(2)||{},cta=block(3)||{},gallery=block(4)||{},stats=block(5)||{},video=block(6)||{},downloads=block(7)||{},formBlock=block(8)||{},settings=block(9)||{};
