@@ -1,3 +1,5 @@
+import {getAdminSession} from "../../../_lib/auth";
+import {requirePermission} from "../../../_lib/access";
 import {notFound} from "next/navigation";
 import Link from "next/link";
 import {db} from "../../../_lib/db";
@@ -11,6 +13,9 @@ const fields=(v:unknown)=>v&&typeof v==="object"&&!Array.isArray(v)&&Array.isArr
 
 export default async function ResourceEditor({params}:{params:Promise<{type:string;id:string}>}){
  const {type,id}=await params;
+ const session=await getAdminSession();if(!session)throw new Error("Not signed in");
+ const permissionMap:Record<string,string>={program:"manage_programs",project:"manage_projects",post:"manage_posts",event:"manage_events",leader:"manage_leadership",partner:"manage_partners",navigation:"manage_navigation",form:"manage_forms"};
+ await requirePermission(session.email,permissionMap[type]||"manage_system");
  let title="",back="/admin",form:React.ReactNode=null,canDelete=false;
  if(type==="program"){const x=await db.program.findUnique({where:{id}});if(!x)return notFound();title="Edit program";back="/admin/programs";form=<form action={updateProgram} className="admin-form admin-form-grid"><input type="hidden" name="id" value={id}/><label>Program title<input name="title" defaultValue={x.title} required/></label><label>Slug<input name="slug" defaultValue={x.slug}/></label><label className="admin-span-2">Summary<textarea name="summary" rows={3} defaultValue={x.summary||""}/></label><label className="admin-span-2">Detailed content<textarea name="content" rows={8} defaultValue={body(x.content)}/></label><button className="admin-primary">Save program</button></form>}
  else if(type==="project"){const [x,programs]=await Promise.all([db.project.findUnique({where:{id}}),db.program.findMany({orderBy:{title:"asc"}})]);if(!x)return notFound();title="Edit project";back="/admin/projects";form=<form action={updateProject} className="admin-form admin-form-grid"><input type="hidden" name="id" value={id}/><label>Project title<input name="title" defaultValue={x.title} required/></label><label>Slug<input name="slug" defaultValue={x.slug}/></label><label>Program<select name="programId" defaultValue={x.programId||""}><option value="">Unassigned</option>{programs.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></label><label>Status<select name="status" defaultValue={x.status}><option>PLANNING</option><option>ACTIVE</option><option>PAUSED</option><option>COMPLETED</option><option>ARCHIVED</option></select></label><label>Location<input name="location" defaultValue={x.location||""}/></label><label>Start date<input type="date" name="startDate" defaultValue={date(x.startDate)}/></label><label>End date<input type="date" name="endDate" defaultValue={date(x.endDate)}/></label><label className="admin-span-2">Summary<textarea name="summary" rows={3} defaultValue={x.summary||""}/></label><label className="admin-span-2">Detailed content<textarea name="content" rows={8} defaultValue={body(x.content)}/></label><button className="admin-primary">Save project</button></form>}
