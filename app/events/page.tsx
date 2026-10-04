@@ -1,2 +1,11 @@
+import {getPublicCmsPage} from "../_lib/public-cms";
+import CmsPageRenderer from "../components/CmsPageRenderer";
 import PageHero from "../components/PageHero";import {images} from "../data/site";
-export default function Events(){return <><PageHero eyebrow="Events" title="Meet. Learn. Act together." text="Upcoming campaigns, trainings, community activities and archived MWONET events." image={images.community}/><section className="section"><div className="container event-layout"><article className="event-feature"><small>UPCOMING</small><h2>New events will appear here.</h2><p>Dates, venues, registration information and event contacts will be published once confirmed.</p></article><div><article className="event-row"><b>01</b><div><small>COMMUNITY</small><h3>Environmental action</h3><p>Campaigns and field activities.</p></div></article><article className="event-row"><b>02</b><div><small>YOUTH</small><h3>Training & empowerment</h3><p>Skills, learning and participation.</p></div></article><article className="event-row"><b>03</b><div><small>PARTNERS</small><h3>Stakeholder engagement</h3><p>Meetings and collaborative activities.</p></div></article></div></div></section></>}
+function Events(){return <><PageHero eyebrow="Events" title="Meet. Learn. Act together." text="Upcoming campaigns, trainings, community activities and archived MWONET events." image={images.community}/><section className="section"><div className="container event-layout"><article className="event-feature"><small>UPCOMING</small><h2>New events will appear here.</h2><p>Dates, venues, registration information and event contacts will be published once confirmed.</p></article><div><article className="event-row"><b>01</b><div><small>COMMUNITY</small><h3>Environmental action</h3><p>Campaigns and field activities.</p></div></article><article className="event-row"><b>02</b><div><small>YOUTH</small><h3>Training & empowerment</h3><p>Skills, learning and participation.</p></div></article><article className="event-row"><b>03</b><div><small>PARTNERS</small><h3>Stakeholder engagement</h3><p>Meetings and collaborative activities.</p></div></article></div></div></section></>}
+
+
+export default async function CmsAwareEvents(){
+ const cms=await getPublicCmsPage("events");
+ if(cms)return <CmsPageRenderer title={cms.title} description={cms.description} blocks={cms.blocks}/>;
+ return <Events/>;
+}
