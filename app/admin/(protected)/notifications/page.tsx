@@ -1,9 +1,11 @@
+import {getAdminSession} from "../../_lib/auth";
+import {requirePermission} from "../../_lib/access";
 import {db} from "../../_lib/db";
 import {createNotification,updateNotificationStatus} from "./actions";
 
 export const dynamic="force-dynamic";
 
-export default async function NotificationsPage(){
+export default async function NotificationsPage(){const session=await getAdminSession();if(!session)throw new Error("Not signed in");await requirePermission(session.email,"manage_notifications");
  const rows=await db.notification.findMany({orderBy:{createdAt:"desc"},take:200,include:{creator:true}});
  const published=rows.filter(r=>r.status==="PUBLISHED").length,drafts=rows.filter(r=>r.status==="DRAFT").length;
  return <main className="admin-content"><div className="admin-page-head"><div><span className="admin-breadcrumb">MWONET Admin / Operations</span><h1>Notifications</h1><p>Create announcements that appear inside the member portal. Email, SMS or push delivery can be added later only if MWONET approves an external provider.</p></div><span className="admin-badge">{rows.length} notices</span></div>
