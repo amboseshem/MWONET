@@ -1,5 +1,5 @@
 import Link from "next/link";
-import {getPublicCmsPage} from "../_lib/public-cms";
+import {getPublicCmsPage,getPublicCmsMetadata} from "../_lib/public-cms";
 import {getSiteConfig} from "../_lib/site-config";
 import CmsPageRenderer from "../components/CmsPageRenderer";
 import PageHero from "../components/PageHero";
@@ -14,3 +14,5 @@ export default async function Contact(){
  <section className="section tint"><div className="container"><div className="section-head"><div><p className="eyebrow">OUR BASE</p><h2>Kapkatenyi · Kopsiro · Bungoma.</h2></div><p>{config["organization.address"]}</p></div>{config["organization.mapUrl"]?<a className="map-placeholder" href={config["organization.mapUrl"]} target="_blank" rel="noreferrer"><span>OPEN MWONET LOCATION IN MAPS ↗</span></a>:<div className="map-placeholder"><span>MAP LINK CAN BE ADDED IN ADMIN → SITE SETTINGS</span></div>}</div></section>
  <section className="section"><div className="container"><p className="eyebrow">SOCIAL MEDIA</p><h2>Follow the work.</h2>{socials.length?<div className="social-grid">{socials.map(([name,url])=><a key={name} href={url} target="_blank" rel="noreferrer">{name}<br/><small>Official MWONET channel ↗</small></a>)}</div>:<div className="notice">Official social-media links have not yet been supplied. They can be added at any time from Admin → Site Settings without changing website code.</div>}</div></section></>
 }
+
+export async function generateMetadata(){return getPublicCmsMetadata("contact","Contact MWONET")}
