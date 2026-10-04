@@ -25,6 +25,13 @@ const pluginCatalog=[
  {key:"analytics",name:"Analytics",permissions:["view_reports"],status:"INSTALLED" as const,manifest:{description:"Traffic, content performance and engagement reporting."}}
 ];
 
+const defaultForms=[
+ {key:"contact",name:"General Contact",schema:{fields:["name","email","phone","subject","message"]}},
+ {key:"volunteer",name:"Volunteer Interest",schema:{fields:["name","email","phone","location","skills","availability","message"]}},
+ {key:"partner",name:"Partnership Enquiry",schema:{fields:["organization","contactName","email","phone","partnershipType","message"]}},
+ {key:"support",name:"Support / Collaboration",schema:{fields:["name","email","phone","supportType","message"]}}
+];
+
 const defaultRoles=[
  {name:"Super Admin",description:"Owner-level platform control. Can manage every module, role, theme, plugin, setting and destructive action."},
  {name:"Administrator",description:"Senior day-to-day administration. Can edit and publish operational content, manage people and programs, but cannot control themes/plugins/system ownership."},
@@ -56,6 +63,7 @@ export async function ensureSystemCatalog(){
  await Promise.all(programs.map(p=>db.program.upsert({where:{slug:p.slug},update:{title:p.title,summary:p.summary},create:{slug:p.slug,title:p.title,summary:p.summary}})));
  await Promise.all(themeCatalog.map(t=>db.theme.upsert({where:{key:t.key},update:{name:t.name,version:t.version,manifest:t.manifest},create:{key:t.key,name:t.name,version:t.version,active:t.active,manifest:t.manifest}})));
  await Promise.all(pluginCatalog.map(p=>db.plugin.upsert({where:{key:p.key},update:{name:p.name,version:"1.0.0",permissions:p.permissions,manifest:p.manifest},create:{key:p.key,name:p.name,version:"1.0.0",status:p.status,permissions:p.permissions,manifest:p.manifest}})));
+ await Promise.all(defaultForms.map(f=>db.form.upsert({where:{key:f.key},update:{name:f.name,schema:f.schema},create:f})));
  const permissionKeys=permissionGroups.flatMap(g=>g.permissions);
  const permissions=await Promise.all(permissionKeys.map(key=>db.permission.upsert({where:{key},update:{},create:{key,description:key.replaceAll("_"," ")}})));
  const roles=await Promise.all(defaultRoles.map(r=>db.role.upsert({where:{name:r.name},update:{description:r.description},create:r})));
