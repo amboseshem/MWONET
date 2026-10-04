@@ -1,9 +1,11 @@
+import {getAdminSession} from "../../_lib/auth";
+import {requirePermission} from "../../_lib/access";
 import Link from "next/link";
 import {db} from "../../_lib/db";
 
 export const dynamic="force-dynamic";
 
-export default async function ReportsPage(){
+export default async function ReportsPage(){const session=await getAdminSession();if(!session)throw new Error("Not signed in");await requirePermission(session.email,"view_reports");
  const [users,members,projects,events,posts,forms,finance,programs]=await Promise.all([
   db.user.count(),db.memberProfile.findMany({include:{user:true}}),db.project.findMany(),db.event.findMany(),db.post.findMany(),db.form.findMany({include:{_count:{select:{submissions:true}}}}),db.financeTransaction.findMany(),db.program.count()
  ]);
