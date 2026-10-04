@@ -1,4 +1,4 @@
-import {getPublicCmsPage} from "../_lib/public-cms";
+import {getPublicCmsPage,getPublicCmsMetadata} from "../_lib/public-cms";
 import CmsPageRenderer from "../components/CmsPageRenderer";
 import Link from "next/link";import PageHero from "../components/PageHero";import {images} from "../data/site";import {constitution} from "../data/constitution";
 const sections=[["history","Identity & Location","MWONET is Maanisha Western Organization Network, headquartered in Kapkatenyi, Kopsiro Sub-County, Bungoma County."],["vision","Vision",constitution.vision],["mission","Mission",constitution.mission],["objectives","Objectives","Environmental conservation, agribusiness and livestock, cash crop development, and financial pooling/micro-credit."],["core-values","Core Values","Unity, integrity and accountability, environmental responsibility, innovation and self-reliance."]];
@@ -10,3 +10,5 @@ export default async function CmsAwareAbout(){
  if(cms)return <CmsPageRenderer title={cms.title} description={cms.description} blocks={cms.blocks}/>;
  return <About/>;
 }
+
+export async function generateMetadata(){return getPublicCmsMetadata("about","About MWONET")}
