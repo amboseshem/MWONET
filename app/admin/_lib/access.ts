@@ -1,0 +1,33 @@
+import {redirect} from "next/navigation";
+import {db} from "./db";
+
+export const modulePermission:Record<string,string|null>={
+ pages:"edit_pages",media:"manage_media",navigation:"manage_navigation",themes:"manage_themes",plugins:"manage_plugins",seo:"manage_seo",
+ posts:"manage_posts",events:"manage_events",programs:"manage_programs",projects:"manage_projects",partners:"manage_partners",
+ leadership:"manage_leadership",members:"view_members",users:"manage_users",roles:"manage_roles",forms:"manage_forms",
+ email:"manage_email",finance:"view_finance",reports:"view_reports",notifications:"manage_notifications",
+ "audit-logs":"view_audit_logs",settings:"manage_settings",system:"manage_system"
+};
+
+export async function getUserAccess(email:string){
+ const user=await db.user.findUnique({where:{email:email.toLowerCase()},include:{roles:{include:{role:{include:{permissions:{include:{permission:true}}}}}}}});
+ if(!user)return {user:null,roles:[] as string[],permissions:[] as string[],isSuperAdmin:false};
+ const roles=user.roles.map(r=>r.role.name);
+ const permissions=[...new Set(user.roles.flatMap(r=>r.role.permissions.map(p=>p.permission.key)))];
+ return {user,roles,permissions,isSuperAdmin:roles.includes("Super Admin")};
+}
+
+export function canAccess(permissions:string[],isSuperAdmin:boolean,permission?:string|null){
+ return isSuperAdmin||!permission||permissions.includes(permission);
+}
+
+export async function requirePermission(email:string,permission?:string|null){
+ const access=await getUserAccess(email);
+ if(!access.user||access.user.status!=="ACTIVE")redirect("/admin/login?error=Account%20is%20not%20active");
+ if(!canAccess(access.permissions,access.isSuperAdmin,permission))redirect("/admin?denied=1");
+ return access;
+}
+
+export async function requireModulePermission(email:string,module:string){
+ return requirePermission(email,modulePermission[module]||null);
+}
