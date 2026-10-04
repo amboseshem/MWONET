@@ -5,10 +5,12 @@ import {redirect} from "next/navigation";
 import {db} from "../../_lib/db";
 import {getAdminSession} from "../../_lib/auth";
 import {ensureAdminUser,slugToPublicPath} from "../../_lib/cms";
+import {getUserAccess,requirePermission} from "../../_lib/access";
 
 function text(fd:FormData,key:string){return String(fd.get(key)||"").trim()}
 function slugify(value:string){return value.toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}
-async function admin(){const session=await getAdminSession();if(!session)redirect("/admin/login");return ensureAdminUser(session.email)}
+async function admin(){const session=await getAdminSession();if(!session)redirect("/admin/login");await requirePermission(session.email,"edit_pages");return ensureAdminUser(session.email)}
+async function ownerOnly(){const session=await getAdminSession();if(!session)redirect("/admin/login");const access=await getUserAccess(session.email);if(!access.isSuperAdmin)throw new Error("Only Super Admin can permanently delete pages.");return access.user}
 
 export async function createPageAction(fd:FormData){
  const actor=await admin();const title=text(fd,"title");if(!title)return;
@@ -41,7 +43,7 @@ export async function archivePageAction(fd:FormData){
 }
 
 export async function deletePageAction(fd:FormData){
- const actor=await admin();const id=text(fd,"id");const page=await db.page.findUnique({where:{id}});if(!page)return;
+ const actor=await ownerOnly();const id=text(fd,"id");const page=await db.page.findUnique({where:{id}});if(!page)return;
  const protectedSlugs=new Set(["home","about","contact","membership","governance","constitution","focus-areas","get-involved","leadership","media","events","mount-elgon","financial-model"]);
  if(protectedSlugs.has(page.slug))return;
  await db.page.delete({where:{id}});await db.auditLog.create({data:{actorId:actor?.id,action:"page.delete",resource:"Page",resourceId:id,before:{title:page.title,slug:page.slug}}});
