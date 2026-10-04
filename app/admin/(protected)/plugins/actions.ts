@@ -6,7 +6,8 @@ import {db} from "../../../admin/_lib/db";
 import {getAdminSession} from "../../../admin/_lib/auth";
 import {ensureAdminUser} from "../../../admin/_lib/cms";
 
-export async function togglePluginAction(formData:FormData){
+async function guardPermission(){const s=await getAdminSession();if(!s)throw new Error("Not signed in");await requirePermission(s.email,"manage_plugins");return s}
+export async function togglePluginAction(formData:FormData){await guardPermission();
  const session=await getAdminSession();if(!session)redirect("/admin/login");
  const key=String(formData.get("key")||"");const next=String(formData.get("next")||"");if(!key)return;
  const actor=await ensureAdminUser(session.email);
