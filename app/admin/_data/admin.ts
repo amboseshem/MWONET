@@ -30,7 +30,7 @@ export const publicPages=[
 ] as const;
 
 export const permissionGroups=[
- {name:"Website",permissions:["edit_pages","publish_pages","manage_media","manage_navigation","manage_themes","manage_plugins","manage_seo"]},
+ {name:"Website",permissions:["edit_pages","publish_pages","manage_media","manage_navigation","manage_themes","manage_plugins","manage_seo","manage_posts"]},
  {name:"People",permissions:["view_members","manage_members","approve_members","manage_users","manage_roles","manage_leadership"]},
  {name:"Programs",permissions:["manage_programs","manage_projects","manage_events","manage_forms","manage_partners"]},
  {name:"Finance",permissions:["view_finance","manage_finance","approve_transactions","manage_revolving_fund"]},
