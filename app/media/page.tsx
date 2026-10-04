@@ -1,3 +1,12 @@
+import {getPublicCmsPage} from "../_lib/public-cms";
+import CmsPageRenderer from "../components/CmsPageRenderer";
 import Link from "next/link";import PageHero from "../components/PageHero";import {images} from "../data/site";
 const items=[["photos","Photo Gallery","Authentic images from landscapes, projects and communities.",images.forest],["videos","Videos","Field stories, interviews and environmental features.",images.community],["projects","Projects","Visual documentation of MWONET initiatives and results.",images.seedlings],["events","Events","Campaigns, trainings, meetings and community activities.",images.farming]];
-export default function Media(){return <><PageHero eyebrow="Media centre" title="Stories from the field." text="A professional home for MWONET photos, videos, projects, events and visual evidence of impact." image={images.forest}/><section className="section"><div className="container media-category-grid">{items.map(([slug,title,text,img])=><Link className="media-category" key={slug} href={`/media/${slug}`} style={{backgroundImage:`linear-gradient(0deg,rgba(5,31,22,.82),rgba(5,31,22,.12)),url(${img})`}}><small>MEDIA</small><strong>{title}</strong><span>{text}</span></Link>)}</div></section></>}
+function Media(){return <><PageHero eyebrow="Media centre" title="Stories from the field." text="A professional home for MWONET photos, videos, projects, events and visual evidence of impact." image={images.forest}/><section className="section"><div className="container media-category-grid">{items.map(([slug,title,text,img])=><Link className="media-category" key={slug} href={`/media/${slug}`} style={{backgroundImage:`linear-gradient(0deg,rgba(5,31,22,.82),rgba(5,31,22,.12)),url(${img})`}}><small>MEDIA</small><strong>{title}</strong><span>{text}</span></Link>)}</div></section></>}
+
+
+export default async function CmsAwareMedia(){
+ const cms=await getPublicCmsPage("media");
+ if(cms)return <CmsPageRenderer title={cms.title} description={cms.description} blocks={cms.blocks}/>;
+ return <Media/>;
+}
