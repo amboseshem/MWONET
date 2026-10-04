@@ -1,4 +1,4 @@
-import {getPublicCmsPage} from "../_lib/public-cms";
+import {getPublicCmsPage,getPublicCmsMetadata} from "../_lib/public-cms";
 import CmsPageRenderer from "../components/CmsPageRenderer";
 import Link from "next/link";import PageHero from "../components/PageHero";import {images} from "../data/site";import {constitution} from "../data/constitution";
 const articles=[
@@ -20,3 +20,5 @@ export default async function CmsAwareConstitution(){
  if(cms)return <CmsPageRenderer title={cms.title} description={cms.description} blocks={cms.blocks}/>;
  return <Constitution/>;
 }
+
+export async function generateMetadata(){return getPublicCmsMetadata("constitution","MWONET Constitution")}
