@@ -26,15 +26,29 @@ const pluginCatalog=[
 ];
 
 const defaultRoles=[
- {name:"Super Admin",description:"Full platform control including security, roles, themes, plugins and settings."},
- {name:"Administrator",description:"Day-to-day administration across website, people, programs and operations."},
- {name:"Editor",description:"Pages, news, events and media publishing workflows."},
+ {name:"Super Admin",description:"Owner-level platform control. Can manage every module, role, theme, plugin, setting and destructive action."},
+ {name:"Administrator",description:"Senior day-to-day administration. Can edit and publish operational content, manage people and programs, but cannot control themes/plugins/system ownership."},
+ {name:"Chairperson",description:"Leadership oversight, reports, programs, projects, events, members and official communications without destructive system control."},
+ {name:"Secretary",description:"Leadership records, membership administration, minutes/events, forms, communications and reports."},
+ {name:"Treasurer",description:"Finance, membership contribution visibility, reports and audit-oriented financial administration."},
+ {name:"Editor",description:"Pages, news, events, media and SEO publishing workflows."},
  {name:"Project Manager",description:"Programs, projects, events, evidence and field implementation records."},
  {name:"Membership Officer",description:"Member review, approvals, status and participation records."},
- {name:"Treasurer",description:"Finance and revolving-fund functions when activated."},
  {name:"Media Manager",description:"Media library, galleries and approved communications assets."},
  {name:"Auditor",description:"Read-only oversight for reports, finance and audit records."}
 ];
+
+const rolePermissions:Record<string,string[]>={
+ Administrator:["edit_pages","publish_pages","manage_media","manage_navigation","manage_seo","manage_posts","view_members","manage_members","approve_members","manage_users","manage_leadership","manage_programs","manage_projects","manage_events","manage_forms","manage_partners","manage_email","manage_notifications","publish_announcements","manage_settings","view_audit_logs","view_reports"],
+ Chairperson:["view_members","manage_leadership","manage_programs","manage_projects","manage_events","manage_partners","manage_email","manage_notifications","publish_announcements","view_audit_logs","view_reports","view_finance"],
+ Secretary:["edit_pages","manage_posts","manage_events","manage_forms","view_members","manage_members","approve_members","manage_leadership","manage_email","manage_notifications","publish_announcements","view_reports"],
+ Treasurer:["view_members","view_finance","manage_finance","approve_transactions","manage_revolving_fund","view_reports","view_audit_logs"],
+ Editor:["edit_pages","publish_pages","manage_media","manage_seo","manage_posts","manage_events"],
+ "Project Manager":["manage_programs","manage_projects","manage_events","manage_forms","manage_partners","view_reports"],
+ "Membership Officer":["view_members","manage_members","approve_members","manage_forms","view_reports"],
+ "Media Manager":["manage_media","edit_pages","manage_posts","manage_seo"],
+ Auditor:["view_finance","view_audit_logs","view_reports","view_members"]
+};
 
 export async function ensureCorePages(){await Promise.all(publicPages.map(([title,path])=>db.page.upsert({where:{slug:pathToSlug(path)},update:{},create:{slug:pathToSlug(path),title,status:"PUBLISHED",seoTitle:`${title} | MWONET`,description:`Official MWONET ${title} page.`}})))}
 
@@ -45,8 +59,11 @@ export async function ensureSystemCatalog(){
  const permissionKeys=permissionGroups.flatMap(g=>g.permissions);
  const permissions=await Promise.all(permissionKeys.map(key=>db.permission.upsert({where:{key},update:{},create:{key,description:key.replaceAll("_"," ")}})));
  const roles=await Promise.all(defaultRoles.map(r=>db.role.upsert({where:{name:r.name},update:{description:r.description},create:r})));
- const superAdmin=roles.find(r=>r.name==="Super Admin");
- if(superAdmin)await Promise.all(permissions.map(p=>db.rolePermission.upsert({where:{roleId_permissionId:{roleId:superAdmin.id,permissionId:p.id}},update:{},create:{roleId:superAdmin.id,permissionId:p.id}})));
+ const permissionMap=new Map(permissions.map(p=>[p.key,p]));
+ for(const role of roles){
+  const keys=role.name==="Super Admin"?permissionKeys:(rolePermissions[role.name]||[]);
+  await Promise.all(keys.map(key=>{const p=permissionMap.get(key);return p?db.rolePermission.upsert({where:{roleId_permissionId:{roleId:role.id,permissionId:p.id}},update:{},create:{roleId:role.id,permissionId:p.id}}):Promise.resolve(null)}));
+ }
 }
 
 export async function getCmsPages(){await ensureCorePages();return db.page.findMany({orderBy:{title:"asc"},include:{_count:{select:{revisions:true,blocks:true}}}})}
