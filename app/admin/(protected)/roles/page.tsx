@@ -1,10 +1,12 @@
+import {getAdminSession} from "../../_lib/auth";
+import {requirePermission} from "../../_lib/access";
 import {db} from "../../_lib/db";
 import {ensureSystemCatalog} from "../../_lib/cms";
 import {createCustomRoleAction,toggleRolePermissionAction} from "./actions";
 
 export const dynamic="force-dynamic";
 
-export default async function RolesPage(){
+export default async function RolesPage(){const session=await getAdminSession();if(!session)throw new Error("Not signed in");await requirePermission(session.email,"manage_roles");
  await ensureSystemCatalog();
  const [roles,permissions]=await Promise.all([
   db.role.findMany({orderBy:{name:"asc"},include:{permissions:{include:{permission:true}},_count:{select:{users:true}}}}),
