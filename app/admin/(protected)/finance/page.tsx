@@ -1,9 +1,11 @@
+import {getAdminSession} from "../../_lib/auth";
+import {requirePermission} from "../../_lib/access";
 import {db} from "../../_lib/db";
 import {approveFinanceTransaction,createFinanceTransaction,rejectFinanceTransaction} from "./actions";
 
 export const dynamic="force-dynamic";
 
-export default async function FinancePage(){
+export default async function FinancePage(){const session=await getAdminSession();if(!session)throw new Error("Not signed in");await requirePermission(session.email,"view_finance");
  const [rows,members]=await Promise.all([
   db.financeTransaction.findMany({orderBy:{occurredAt:"desc"},take:200,include:{member:{include:{user:true}},approver:true}}),
   db.memberProfile.findMany({where:{status:"ACTIVE"},include:{user:true},orderBy:{user:{name:"asc"}}})
