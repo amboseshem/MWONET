@@ -6,7 +6,8 @@ import {db} from "../../../admin/_lib/db";
 import {getAdminSession} from "../../../admin/_lib/auth";
 import {ensureAdminUser} from "../../../admin/_lib/cms";
 
-export async function activateThemeAction(formData:FormData){
+async function guardPermission(){const s=await getAdminSession();if(!s)throw new Error("Not signed in");await requirePermission(s.email,"manage_themes");return s}
+export async function activateThemeAction(formData:FormData){await guardPermission();
  const session=await getAdminSession();if(!session)redirect("/admin/login");
  const key=String(formData.get("key")||"");if(!key)return;
  const actor=await ensureAdminUser(session.email);
